@@ -14,7 +14,7 @@ int snake_size, change_x, change_y, coordinates_x[128], coordinates_y[128];
 int food_x = -1, food_y = -1;
 char symbol;
 int a[16][8];
-const int N = 8, M = 16, INTERVAL = 200;
+const int N = 16, M = 8, INTERVAL = 200;
 
 void change_direction() {
   int x, y;
@@ -52,7 +52,9 @@ void show_table() {
   mtrx.clear();
   for(int i = 1 ; i <= snake_size; i++) {
     mtrx.dot(coordinates_x[i],coordinates_y[i]);
+    
   }
+  mtrx.dot(food_x, food_y);
   mtrx.update();
     
 }
@@ -84,10 +86,10 @@ bool game_over() {
 
 // Проверяем, не вышла ли змейка за поле, если да то возвращаем ее обратно.
 void check_coordinates() {
-  if (coordinates_x[1] > N) coordinates_x[1] = 1;
-  if (coordinates_x[1] < 1) coordinates_x[1] = N;
-  if (coordinates_y[1] > M) coordinates_y[1] = 1;
-  if (coordinates_y[1] < 1) coordinates_y[1] = M;
+  if (coordinates_x[1] >= N) coordinates_x[1] = 0;
+  if (coordinates_x[1] < 0) coordinates_x[1] = N-1;
+  if (coordinates_y[1] >= M) coordinates_y[1] = 0;
+  if (coordinates_y[1] < 0) coordinates_y[1] = M-1;
 }
 
 // функция следующего хода, в которой наша змейка сдвигается в сторону
@@ -123,9 +125,10 @@ void next_step() {
   // Если змея укусила себя.
   if (game_over()) {
     // Cообщаем всю правду о игроке.
-    mtrx.clear();
+    mtrx.fill();
+    mtrx.update();
     // Приостанавливаем игру.
-    while(!analogRead(J_SW)) delay(100);
+    while(analogRead(J_SW)) delay(100);
 
     // Завершаем программу.
     
