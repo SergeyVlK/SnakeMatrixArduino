@@ -1,5 +1,8 @@
 #include <Arduino.h>
 
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
 #include <GyverMAX7219.h>
 #define AM_W 16  // 2 матрицы (18 точки)
 #define AM_H 8  // 1 матрица (8 точек)
@@ -14,16 +17,20 @@ int snake_size, change_x, change_y, coordinates_x[128], coordinates_y[128];
 int food_x = -1, food_y = -1;
 char symbol;
 int a[16][8];
-const int N = 16, M = 8, INTERVAL = 200;
+const int N = 16, M = 8;
+//int INTERVAL = 200;
+int INTERVAL = 100;
+int score = 0;
+bool flag = false;
 
 void change_direction() {
   int x, y;
   x = analogRead(J_VRX);
   y = analogRead(J_VRY);
-  if(x > 900) symbol = 'd';
-  if(x < 100) symbol = 'a';
-  if(y < 100) symbol = 's';
-  if(y > 900) symbol = 'w';
+  if(x > 650) symbol = 'd';
+  if(x < 350) symbol = 'a';
+  if(y < 350) symbol = 's';
+  if(y > 650) symbol = 'w';
   switch (symbol) {
     // Управление змейкой у нас через wasd.
     case 'w': if (change_x != 1 || change_y != 0) {
@@ -117,6 +124,8 @@ void next_step() {
     snake_size++;
     food_x = -1;
     food_y = -1;
+    score++;
+    INTERVAL -= 10;
   }
 
   // Рисуем змейку.
@@ -127,10 +136,17 @@ void next_step() {
     // Cообщаем всю правду о игроке.
     mtrx.fill();
     mtrx.update();
+    lcd.clear();
+    lcd.print("You lose!");
+    lcd.setCursor(0,1);
+    lcd.print("Score: ");
+    lcd.print(score);
+    flag = false;
     // Приостанавливаем игру.
     while(analogRead(J_SW)) delay(100);
 
     // Завершаем программу.
+    
     
   }
 }
@@ -185,6 +201,12 @@ void setup() {
   //mtrx.setRotation(1);   // можно повернуть 0..3, по 90 град по часовой стрелке
   Serial.begin(9600);
   pinMode(J_SW, INPUT_PULLUP);
+
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  
+  
   
 }
 
@@ -193,6 +215,8 @@ void loop() {
   standart_settings();
 
   while (true) {
+
+    
     // Если нажата клавиша, обрабатываем нажатую клавишу.
     //if (kbhit() != 0)
      change_direction();
@@ -207,8 +231,18 @@ void loop() {
     // Рисуем змейку.
     show_table();
 
+    if(!flag){
+      lcd.clear();
+      lcd.print("Score: ");
+      lcd.print(score);
+      lcd.setCursor(0,1);
+      lcd.print("Speed: ");
+      lcd.print(INTERVAL);
+    }
+
     // "Усыпляем" программу на заданный интервал.
     delay(INTERVAL);
+    
   }
 
 
